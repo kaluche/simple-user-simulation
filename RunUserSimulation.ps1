@@ -40,14 +40,6 @@ Catch {
 }
 
 
-
-
-
-
-
-
-
-
 function simulate-user 
 {
 <#
@@ -91,7 +83,7 @@ Some of the powershell cmdlets require powershell version 3+
         [Parameter(Mandatory=$False)]
 		[int]$Unactivity = 2,
         [Parameter(Mandatory=$False)]
-		[int]$actiontimeout = 60,
+		[int]$actiontimeout = 2,
         [Parameter(Mandatory=$False)]
 		[int]$duration = 0
     )
@@ -121,7 +113,21 @@ Some of the powershell cmdlets require powershell version 3+
         $round_counter += $displayheader #only increase count if we displayed the previous header
         $displayheader = $false #set to false to only display non-empty round headers 
 
-
+        # every 10 round, update config
+        if ($round_counter % 10 -eq 0) {
+            Write-Host "[+] $round_counter is divisible by 10. Trying to reimport config file."
+            Try{
+                . .\Config.ps1 -ErrorAction Stop
+                write-host "[+] Reimporting config file : done."
+            }
+            Catch {
+                write-host "[-] Reimporting config file : FAILED"
+                Write-Host Config File could not ne loaded. Looks like you removed the config file, left it open, or that you made a error when ediditng it.
+                Write-Host This program will exit in one minute
+                Start-Sleep -s 60
+                Break
+            }
+        }
         if ($schedule) {$IEhash, $Maphash, $Typehash, $line_number, $lastactiontimestamp = update-schedule -IEhash $IEhash -Maphash $Maphash -Typehash $Typehash -line_number $line_number -lastactiontimestamp $lastactiontimestamp -PClist $list_computer}
 
 
@@ -147,7 +153,7 @@ Some of the powershell cmdlets require powershell version 3+
             $temp = (Get-Job -Name EIsimu -ErrorAction SilentlyContinue| Stop-Job) 
             $temp = (Get-Process iexplore -ErrorAction SilentlyContinue | Stop-Process) 
             $temp = (Get-Process ielowutil -ErrorAction SilentlyContinue | Stop-Process) 
-            "----------------------------------------------------------"
+            #"----------------------------------------------------------"
             $displayheader = $true
             Start-Sleep -s $Unactivity
         } #generate IE activity

@@ -11,10 +11,6 @@ Catch {
 }
 
 
-
-
-
-
 function simulateIE
 {
     [CmdletBinding()]
@@ -60,8 +56,10 @@ function browse
 
     $IE = New-Object -com internetexplorer.application 
     $IE.visible = $true
-
-
+    #write-host "[DEBUG] #####"
+    #write-host "[DEBUG] Using Url : $url"
+    #write-host "[DEBUG] #####"
+    # Write-Host $url
     $asm = [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
     $screen = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
     $ie.Width = $screen.width
@@ -80,7 +78,7 @@ function browse
 
 
 
-     $hsg = Invoke-WebRequest -Uri ($url) -UseBasicParsing
+     $hsg = Invoke-WebRequest -Uri ($url) -UseBasicParsing -useragent "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0"
 
         #get all valid links in the page
         $links = $hsg.Links.Href | Sort-Object | Get-Unique | select-string -pattern http
@@ -116,8 +114,11 @@ function browse
 
 function get_url
 {
-
-    $url = $IE_URIs[(Get-Random -Maximum ([array]$IE_URIs).count)]
+    #$url = $IE_URIs[(Get-Random -Maximum ([array]$IE_URIs).count)]
+    # Assuming $IE_URIs contains the string with line breaks
+    $IE_URIs = $IE_URIs -split "`n" | Where-Object { $_ -match '^http' }
+    # Get a random URL from the array
+    $url = $IE_URIs | Get-Random
     return $url
 }
 
